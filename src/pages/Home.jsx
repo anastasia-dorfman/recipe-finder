@@ -11,19 +11,37 @@ export const loader = async ({ request }) => {
   const page = parseInt(url.searchParams.get("page") || "1");
 
   const API_KEY = import.meta.env.VITE_SPOONACULAR_API_KEY;
-  const response = await fetch(
-    `https://api.spoonacular.com/recipes/complexSearch?apiKey=${API_KEY}&query=${searchTerm}&cuisine=${cuisine}&number=5&offset=${
-      (page - 1) * 5
-    }`
-  );
-  const data = await response.json();
-  return {
-    recipes: data.results,
-    totalResults: data.totalResults,
-    searchTerm,
-    cuisine,
-    page,
-  };
+  console.log("Fetching data with params:", { searchTerm, cuisine, page });
+  try {
+    const response = await fetch(
+      `https://api.spoonacular.com/recipes/complexSearch?apiKey=${API_KEY}&query=${searchTerm}&cuisine=${cuisine}&number=5&offset=${
+        (page - 1) * 5
+      }`
+    );
+    console.log("API Response status:", response.status);
+    if (!response.ok) {
+      throw new Error(`API returned status: ${response.status}`);
+    }
+    const data = await response.json();
+    console.log("API Response data:", data);
+    return {
+      recipes: data.results,
+      totalResults: data.totalResults,
+      searchTerm,
+      cuisine,
+      page,
+    };
+  } catch (error) {
+    console.error("API Error:", error);
+    return {
+      recipes: [],
+      totalResults: 0,
+      searchTerm,
+      cuisine,
+      page,
+      error: error.message,
+    };
+  }
 };
 
 const Home = () => {
@@ -51,7 +69,6 @@ const Home = () => {
 
   return (
     <Wrapper>
-      {/* <h1>Recipe Search</h1> */}
       <form onSubmit={handleSearch}>
         <input
           type="text"
@@ -71,10 +88,15 @@ const Home = () => {
           Clear Filters
         </button>
       </form>
+      {error && <div className="error-message">{error}</div>}
       <div className="recipes">
-        {recipes.map((recipe) => (
-          <RecipeCard key={recipe.id} recipe={recipe} />
-        ))}
+        {recipes && recipes.length > 0 ? (
+          recipes.map((recipe) => (
+            <RecipeCard key={recipe.id} recipe={recipe} />
+          ))
+        ) : (
+          <p>No recipes found. Try a different search term.</p>
+        )}
       </div>
       <Pagination
         currentPage={page}
