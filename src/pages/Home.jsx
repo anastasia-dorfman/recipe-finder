@@ -51,6 +51,7 @@ const Home = () => {
     searchTerm: initialSearchTerm,
     cuisine: initialCuisine,
     page,
+    error,
   } = useLoaderData();
   const [searchTerm, setSearchTerm] = useState(initialSearchTerm);
   const [cuisine, setCuisine] = useState(initialCuisine);
